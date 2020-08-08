@@ -1,5 +1,3 @@
-# CD-682
-
 ## Lambda functions running for too long with far too much memory
 
 ---

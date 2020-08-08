@@ -8,8 +8,9 @@ def main():
     functions_list=[]
     for f_name in ls.get('Functions'):
         functions_list.append(f_name.get('FunctionName'))
+
     for name in functions_list:
-        result = get_metrics_lambda(name,output)
+        get_metrics_lambda(name,output)
     output.close()
 
 
@@ -18,7 +19,16 @@ def ls_func():
     response = client.list_functions()
     return(response)
 
+def get_memory(fName):
+    client = boto3.client('lambda')
+    response = client.get_function(
+         FunctionName=fName)
+    MemorySize = response['Configuration']['MemorySize']
+    return MemorySize
+
+
 def get_metrics_lambda(fName,output):
+    MemorySize = get_memory(fName)
     start_time = datetime.datetime.utcnow() - datetime.timedelta(weeks=2)
     end_time = datetime.datetime.utcnow()
     client = boto3.client('cloudwatch')
@@ -67,8 +77,9 @@ def get_metrics_lambda(fName,output):
         min = data.get('Minimum')
         av = data.get('Average')
         max = data.get('Maximum')
-        print ("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max))
-        output.write("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max))
+        memory = MemorySize
+        print ("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max) + "\n" + 'MemorySize:'+ str(MemorySize))
+        output.write("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max)+ "\n" + 'MemorySize:'+ str(MemorySize))
     print ("******************************************************************************************************************")
     output.write("\n******************************************************************************************************************\n")
 
