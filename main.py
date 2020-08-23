@@ -1,24 +1,54 @@
 import time
 import datetime
 import boto3
+import json
+import logging
+# initiate logging
+logger = logging.getLogger()
 
 def main():
     output=open("LAMBDA_average_usage.txt", "w")
     ls = ls_func()
     functions_list=[]
+    data_list = []
     for f_name in ls.get('Functions'):
         functions_list.append(f_name.get('FunctionName'))
-    for name in functions_list:
-        result = get_metrics_lambda(name,output)
-    output.close()
 
+    for name in functions_list:
+        metric_data = get_metrics_lambda(name,output)
+        if metric_data != None: 
+            data_list.append(metric_data)
+    output.close()
+    make_json(data_list)
 
 def ls_func():
     client = boto3.client('lambda')
     response = client.list_functions()
     return(response)
 
+def get_memory(fName):
+    client = boto3.client('lambda')
+    response = client.get_function(
+         FunctionName=fName)
+    MemorySize = response['Configuration']['MemorySize']
+    return MemorySize
+
+def make_json(records):
+    logger.info("Creating json file")    
+    
+    try:
+        with open(f"lambda.json", "w") as outfile:
+            for result in records:
+                json.dump(result, outfile)
+                outfile.write('\n')
+        logger.info('json created')
+
+    except:
+        logging.exception("!!!json creation failed!!!")
+        raise
+
 def get_metrics_lambda(fName,output):
+    MemorySize = get_memory(fName)
     start_time = datetime.datetime.utcnow() - datetime.timedelta(weeks=2)
     end_time = datetime.datetime.utcnow()
     client = boto3.client('cloudwatch')
@@ -43,8 +73,7 @@ def get_metrics_lambda(fName,output):
         min = data.get('Minimum')
         av = data.get('Average')
         max = data.get('Maximum')
-        print ("Function name:" + " " + fName + "\n" + "\n" + "Invocations:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max) + "\n")
-        output.write("Function name:" + " " + fName + "\n" + "\n" + "Invocations:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max) + "\n")
+        #output.write("Function name:" + " " + fName + "\n" + "\n" + "Invocations:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max) + "\n")
 
     response_duration = client.get_metric_statistics(
         Namespace='AWS/Lambda',
@@ -63,14 +92,20 @@ def get_metrics_lambda(fName,output):
         ],
         Unit='Milliseconds'
      )
+    
     for data in response_duration.get('Datapoints'):
         min = data.get('Minimum')
         av = data.get('Average')
         max = data.get('Maximum')
-        print ("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max))
-        output.write("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max))
-    print ("******************************************************************************************************************")
-    output.write("\n******************************************************************************************************************\n")
+
+        json_data = {"FucntionName": fName, "Minimum": str(min), "Average": str(av), "Maximum": str(max), "MemorySize": str(MemorySize)}
+        print(json_data)
+        return json_data
+
+        #print ("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max) + "\n" + 'MemorySize:'+ str(MemorySize))
+        #output.write("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max)+ "\n" + 'MemorySize:'+ str(MemorySize))
+    #print ("******************************************************************************************************************")
+    #output.write("\n******************************************************************************************************************\n")
 
 
 

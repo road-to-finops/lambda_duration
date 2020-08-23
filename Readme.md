@@ -1,31 +1,17 @@
-# CD-682
-
 ## Lambda functions running for too long with far too much memory
 
----
 
 ### Description:
-Prints list with the minimum, average and maximum number of invocations and duration of each lambda function in the account.
+Prints list with the minimum, average and maximum number of invocations and duration of each lambda function in the account as well as the memory attached to the lambda.
 
-Input:
-```
+This exports a easy read txt file as well as a json file which can be read by athena
 
+### Requirments
+Access keys setup to account you wish to access lamda data
+Python 3
+Boto3 
+AWS cli
 
-```
+### How to run
 
-Output:
-```
-...
-Function name: _bastion_stop
-
-Invocations:
-Minimum:1.0
-Average:1.0
-Maximum:1.0
-
-Duration:
-Minimum:170.07
-Average:312.674444444
-Maximum:695.29
-
-```
+``` python3 main.py   ```
