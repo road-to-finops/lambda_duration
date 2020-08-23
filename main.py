@@ -10,13 +10,16 @@ def main():
     output=open("LAMBDA_average_usage.txt", "w")
     ls = ls_func()
     functions_list=[]
+    data_list = []
     for f_name in ls.get('Functions'):
         functions_list.append(f_name.get('FunctionName'))
 
     for name in functions_list:
-        get_metrics_lambda(name,output)
+        metric_data = get_metrics_lambda(name,output)
+        if metric_data != None: 
+            data_list.append(metric_data)
     output.close()
-
+    make_json(data_list)
 
 def ls_func():
     client = boto3.client('lambda')
@@ -89,7 +92,7 @@ def get_metrics_lambda(fName,output):
         ],
         Unit='Milliseconds'
      )
-    data_list = []
+    
     for data in response_duration.get('Datapoints'):
         min = data.get('Minimum')
         av = data.get('Average')
@@ -97,7 +100,7 @@ def get_metrics_lambda(fName,output):
 
         json_data = {"FucntionName": fName, "Minimum": str(min), "Average": str(av), "Maximum": str(max), "MemorySize": str(MemorySize)}
         print(json_data)
-        data_list.append(json_data)
+        return json_data
 
         #print ("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max) + "\n" + 'MemorySize:'+ str(MemorySize))
         #output.write("Duration:" + "\n" + "Minimum:" + str(min) + "\n" + "Average:" + str(av) + "\n" + "Maximum:" + str(max)+ "\n" + 'MemorySize:'+ str(MemorySize))
