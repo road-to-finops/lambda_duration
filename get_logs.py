@@ -7,15 +7,19 @@ import logging
 logger = logging.getLogger()
 
 
-def check_log_group():
+def check_log_group(logGroupNamePrefix):
     client = boto3.client('logs')
 
-    paginator = client.get_paginator('describe_log_groups')
-    response_iterator = paginator.paginate(
-    logGroupNamePrefix='string',
-    PaginationConfig={
-        'MaxItems': 123,
-        'PageSize': 123,
-        'StartingToken': 'string'
-    }
-)
+    response = client.describe_log_groups(
+    logGroupNamePrefix=logGroupNamePrefix
+    )
+    import pdb; pdb.set_trace()
+
+    f = response['logGroups']
+    for function in f:
+        logGroupName = function['logGroupName']
+        if logGroupName == logGroupNamePrefix:
+            print(function['arn'])
+
+logGroupNamePrefix = '/aws/lambda/service_dynamo'
+check_log_group(logGroupNamePrefix)
