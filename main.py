@@ -3,6 +3,7 @@ import datetime
 import boto3
 import json
 import sys
+import get_logs
 import logging
 # initiate logging
 logger = logging.getLogger()
@@ -21,6 +22,7 @@ def main():
     '''
     for name in functions_list:
         metric_data = get_metrics_lambda(name,output)
+        
         if metric_data != None: 
             data_list.append(metric_data)
     output.close()
@@ -68,7 +70,10 @@ def make_json(records):
         raise
 
 def get_metrics_lambda(fName,output):
-    MemorySize = get_memory(fName)
+    MemorySize = get_memory(fName) # Gets memory size data
+
+    log  = get_logs.main(fName) # goes into additional file to get logs
+
     start_time = datetime.datetime.utcnow() - datetime.timedelta(weeks=2)
     end_time = datetime.datetime.utcnow()
     client = boto3.client('cloudwatch')
@@ -118,7 +123,7 @@ def get_metrics_lambda(fName,output):
         av = data.get('Average')
         max = data.get('Maximum')
 
-        json_data = {"FucntionName": fName, "Minimum": str(min), "Average": str(av), "Maximum": str(max), "MemorySize": str(MemorySize)}
+        json_data = {"FucntionName": fName, "Minimum": str(min), "Average": str(av), "Maximum": str(max), "MemorySize": str(MemorySize), "Log":log}
         print(json_data)
         return json_data
 
