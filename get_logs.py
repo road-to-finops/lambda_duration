@@ -1,5 +1,5 @@
 import time
-import datetime
+from datetime import datetime, timedelta
 import boto3
 import json
 import logging
@@ -34,11 +34,27 @@ def get_log_stream(client, logGroupNamePrefix):
     orderBy='LastEventTime',
     descending=True
     )
-    
-    print(response['logStreams'][0]['logStreamName'])
+    logStreamName = response['logStreams'][0]['logStreamName']
+    print(logStreamName)
+    return logStreamName
 
+
+def filter_logs(client, logGroupNamePrefix, logStreamName):
+    #log_stream_split = logStreamName.split('/')
+    
+    response = client.filter_log_events(
+    logGroupName=logGroupNamePrefix,
+    logStreamNames=[
+        logStreamName
+    ], 
+    filterPattern='REPORT'
+    )
+    for item in response['events']:
+        print(item['message'])
+    
 client = boto3.client('logs')
 logGroupNamePrefix = '/aws/lambda/service_dynamo'
 check = check_log_group(client, logGroupNamePrefix)
 if check != None:
-    get_log_stream(client, logGroupNamePrefix)
+    logStreamName = get_log_stream(client, logGroupNamePrefix)
+    filter_logs(client, logGroupNamePrefix, logStreamName)
