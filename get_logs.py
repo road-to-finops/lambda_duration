@@ -4,7 +4,7 @@ import boto3
 import json
 import logging
 # initiate logging
-logger = logging.getLogger()
+log= logging.getLogger()
 
 
 def check_log_group(client, logGroupNamePrefix):
@@ -20,15 +20,18 @@ def check_log_group(client, logGroupNamePrefix):
                 logGroupName = function['logGroupName']
                 if logGroupName == logGroupNamePrefix:
                     print(function['arn'])
+                    log.info(function['arn'])
                     return function['arn']
         else:
             print(f"{logGroupNamePrefix} is not a log group")
+            log.error(f"{logGroupNamePrefix} is not a log group")
             return None
     except Exception as e:
         print(e)
 
         
 def get_log_stream(client, logGroupNamePrefix):
+    log.info("Getting Log Stream name")
     response = client.describe_log_streams(
     logGroupName=logGroupNamePrefix,
     orderBy='LastEventTime',
@@ -50,6 +53,7 @@ def filter_logs(client, logGroupNamePrefix, logStreamName):
     filterPattern='REPORT'
     )
     for item in response['events']:
+        log.info("finding report with memory info")
         print(item['message'])
     
 client = boto3.client('logs')
