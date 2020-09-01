@@ -9,17 +9,21 @@ logger = logging.getLogger()
 
 def check_log_group(logGroupNamePrefix):
     client = boto3.client('logs')
+    try:
+        response = client.describe_log_groups(
+        logGroupNamePrefix=logGroupNamePrefix
+        )
 
-    response = client.describe_log_groups(
-    logGroupNamePrefix=logGroupNamePrefix
-    )
-    import pdb; pdb.set_trace()
-
-    f = response['logGroups']
-    for function in f:
-        logGroupName = function['logGroupName']
-        if logGroupName == logGroupNamePrefix:
-            print(function['arn'])
+        f = response['logGroups']
+        if f != []:
+            for function in f:
+                logGroupName = function['logGroupName']
+                if logGroupName == logGroupNamePrefix:
+                    print(function['arn'])
+        else:
+            print(f"{logGroupNamePrefix} is not a log group")
+    except Exception as e:
+        print(e)
 
 logGroupNamePrefix = '/aws/lambda/service_dynamo'
 check_log_group(logGroupNamePrefix)
