@@ -13,13 +13,7 @@ def main():
     functions_list = ls_fun_pag()
     
     data_list = []
-
-    '''
-    functions_list=[]
-    ls = ls_func()
-    for f_name in ls.get('Functions'):
-        functions_list.append(f_name.get('FunctionName'))
-    '''
+    
     for name in functions_list:
         metric_data = get_metrics_lambda(name,output)
         
@@ -38,7 +32,9 @@ def ls_fun_pag():
     for page in response_iterator:
         f = page['Functions']
         for function in f:
-            function_list.append(function['FunctionName'])
+            Fdetails = { "FunctionName": function['FunctionName'], 
+            "FunctionArn":function['FunctionArn'] }
+            function_list.append(Fdetails)
     
     return function_list
 
@@ -69,7 +65,9 @@ def make_json(records):
         logging.exception("!!!json creation failed!!!")
         raise
 
-def get_metrics_lambda(fName,output):
+def get_metrics_lambda(Function,output):
+    fName = Function['FunctionName']
+    fArn = Function['FunctionArn']
     MemorySize = get_memory(fName) # Gets memory size data
 
     log  = get_logs.main(fName) # goes into additional file to get logs
@@ -123,7 +121,7 @@ def get_metrics_lambda(fName,output):
         av = data.get('Average')
         max = data.get('Maximum')
 
-        json_data = {"FucntionName": fName, "Minimum": str(min), "Average": str(av), "Maximum": str(max), "MemorySize": str(MemorySize), "Log":log}
+        json_data = {"FucntionName": fName, "FucntionArn": fArn, "Minimum": str(min), "Average": str(av), "Maximum": str(max), "MemorySize": str(MemorySize), "Log":log}
         print(json_data)
         return json_data
 
