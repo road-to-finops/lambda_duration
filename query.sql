@@ -1,6 +1,6 @@
-SELECT fucntionname,
-         memorysize,
-        "Max Memory Used",
-        cast( ltrim(replace("Max Memory Used",
-         'MB')) as varchar) AS "Max Memory"
-FROM "athenacurcfn_mybillingreport"."lambda_usage"
+SELECT *,("Provisioned Memory"- "Max Memory") As "Unutilized Memory" from
+    (SELECT fucntionname,
+         memorysize AS "Provisioned Memory",
+         cast( trim(replace("Max Memory Used",
+         'MB')) AS integer) AS "Max Memory"
+    FROM "athenacurcfn_mybillingreport"."lambda_usage")
