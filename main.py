@@ -5,6 +5,8 @@ import json
 import sys
 import get_logs
 import logging
+import os
+from datetime import date, timedelta
 # initiate logging
 logger = logging.getLogger()
 
@@ -20,7 +22,9 @@ def main():
         if metric_data != None: 
             data_list.append(metric_data)
     output.close()
+
     make_json(data_list)
+    s3_upload()
 
 def ls_fun_pag():
     client = boto3.client('lambda')
@@ -120,8 +124,18 @@ def get_metrics_lambda(Function,output):
         min = data.get('Minimum')
         av = data.get('Average')
         max = data.get('Maximum')
-
+        
+        x = log.split('\t')
         json_data = {"FucntionName": fName, "FucntionArn": fArn, "Minimum": str(min), "Average": str(av), "Maximum": str(max), "MemorySize": str(MemorySize), "Log":log}
+        for item in x:
+            try:
+                key = item.split(':')[0]
+                value = item.split(':')[1]
+                json_data[key]=value
+            except:
+                pass
+        
+
         print(json_data)
         return json_data
 
@@ -130,6 +144,17 @@ def get_metrics_lambda(Function,output):
     #print ("******************************************************************************************************************")
     #output.write("\n******************************************************************************************************************\n")
 
+def s3_upload():
+    logger.info("uploading to S3")
+    today = date.today()
+    year = today.year
+    month = today.month
+    
+    s3 = boto3.resource("s3")
+    s3.meta.client.upload_file(
+        "lambda.json", os.environ["BUCKET_NAME"], f"lambda/year={year}/month={month}/lambda_{year}_{month}.json"
+    )
+    
 
 
 if __name__ == '__main__':
