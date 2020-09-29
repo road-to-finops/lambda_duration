@@ -159,4 +159,3 @@ def s3_upload():
 
 if __name__ == '__main__':
     main()
-    #export BUCKET_NAME=buisnesspennybucket-455007007237
